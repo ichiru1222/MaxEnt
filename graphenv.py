@@ -133,7 +133,7 @@ def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0�
 
 
 if __name__ == '__main__':
-    number_of_nodes = 50
+    number_of_nodes = 40
     p = 0.05
     number_of_exparts = 10
     reward = np.zeros(10)
