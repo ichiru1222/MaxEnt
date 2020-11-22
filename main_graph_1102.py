@@ -27,19 +27,24 @@ def phi_intV(state, number_of_nodes): #特徴量
     phi_s = np.zeros(number_of_nodes)
     for i in range(number_of_nodes):
         if i == state:
-            phi_s[i] = 1
+            phi_s[i] = intVs_softmax[i]
         else:
             phi_s[i] = 0 
     #行列で返す
     return phi_s 
 
-def Mu(traj, number_of_nodes):
+def Mu(traj, number_of_nodes, inintV):
     Mu_s = np.zeros(number_of_nodes)
-    for s in traj:
-        Mu_s = Mu_s + phi(s, number_of_nodes)        
+    if inintV == 0:
+        for s in traj:
+            Mu_s = Mu_s + phi(s, number_of_nodes)
+    else:
+        for s in traj:
+            Mu_s = Mu_s + phi_intV(s, number_of_nodes) 
+
     return Mu_s
 
-def MuE(trajectories, number_of_nodes):
+def MuE(trajectories, number_of_nodes, inintV):
     MuE_m = np.zeros(number_of_nodes)
     
     for traj in trajectories:
@@ -49,13 +54,13 @@ def MuE(trajectories, number_of_nodes):
     
     return MuE_m
 
-def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate):#MaxEnt本体 inintV:
+def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#MaxEnt本体 inintV:
     #P = np.array([[np.eye(1, env.nS, env.P[s][a][0][1])[0] for a in range(env.nA)] for s in range(env.nS)])
     P = env.P
     #x_size,y_size = env.shape[0],env.shape[1]
     
     global muE
-    muE = MuE(trajectories, env.nS)
+    muE = MuE(trajectories, env.nS, inintV)
     #muE[4],muE[24] = 0.5,0.5
     #print(muE)    
     theta = np.random.uniform(-0.5, 0.5, size=env.nS)
@@ -161,6 +166,11 @@ def miyasui_plot(for_plot,X,Y):#Q値を可視化
 def split_list(l, n):
     for idx in range(0, len(l), n):
         yield l[idx:idx + n]
+
+def softmax(x):
+   # ベクトル形状なら行列形状に変換
+        # テンソル（x：行列）、軸（axis=1： 列の横方向に計算）
+    return np.exp(x-max(x)) / np.sum(x)
         
 ############ ここまで関数 ########### ここからmain ##############
 
@@ -184,6 +194,8 @@ if __name__ == '__main__':
 
     
     G = graphenv.make_random_graph(number_of_nodes, p)
+    intVs = graphenv.spacesyntax(G)
+    intVs_softmax = softmax(intVs)
 
     env = graphenv.Graphenv(G, reward)
     
