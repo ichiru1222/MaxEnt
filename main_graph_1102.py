@@ -22,7 +22,7 @@ def phi(state, number_of_nodes): #特徴量
     #行列で返す
     return phi_s 
 
-def phi_intV(state, number_of_nodes): #特徴量
+def phi_intV(state, number_of_nodes): #特徴量にintVを組み込む
     #one-hotベクトル化する
     phi_s = np.zeros(number_of_nodes)
     for i in range(number_of_nodes):
@@ -48,13 +48,13 @@ def MuE(trajectories, number_of_nodes, inintV):
     MuE_m = np.zeros(number_of_nodes)
     
     for traj in trajectories:
-        MuE_m += Mu(traj, number_of_nodes)
+        MuE_m += Mu(traj, number_of_nodes,inintV)
     
     MuE_m = MuE_m / len(trajectories)
     
     return MuE_m
 
-def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#MaxEnt本体 inintV:
+def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#MaxEnt本体 inintV:0ならば普通の逆強化学習を実行，それ以外はIntVを組み込む
     #P = np.array([[np.eye(1, env.nS, env.P[s][a][0][1])[0] for a in range(env.nA)] for s in range(env.nS)])
     P = env.P
     #x_size,y_size = env.shape[0],env.shape[1]
@@ -62,7 +62,8 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#
     global muE
     muE = MuE(trajectories, env.nS, inintV)
     #muE[4],muE[24] = 0.5,0.5
-    #print(muE)    
+    print(muE)
+    print(sum(muE))    
     theta = np.random.uniform(-0.5, 0.5, size=env.nS)
     feature_matrix = np.eye(env.nS)
 
@@ -167,10 +168,11 @@ def split_list(l, n):
     for idx in range(0, len(l), n):
         yield l[idx:idx + n]
 
-def softmax(x):
-   # ベクトル形状なら行列形状に変換
-        # テンソル（x：行列）、軸（axis=1： 列の横方向に計算）
-    return np.exp(x-max(x)) / np.sum(x)
+def softmax(a):
+    a_max = max(a)
+    x = np.exp(a-a_max)
+    u = np.sum(x)
+    return x/u
         
 ############ ここまで関数 ########### ここからmain ##############
 
@@ -187,37 +189,55 @@ if __name__ == '__main__':
     #grid_shape =[X,Y]
     #reward = np.full(np.prod(grid_shape), 0.0)
     #setting expert 
-    number_of_nodes = 10
-    p = 0.3
+    number_of_nodes = 30
+    p = 0.05
     reward = np.zeros(number_of_nodes)
-    number_of_exparts = 50
+    number_of_exparts = 500
+    inintV = 1
+    num_testdata = 100
+    num_learndata = number_of_exparts - num_testdata
 
     
-    G = graphenv.make_random_graph(number_of_nodes, p)
+    G = graphenv.make_random_graph(number_of_nodes, p) #ランダムな連結グラフ
     intVs = graphenv.spacesyntax(G)
     intVs_softmax = softmax(intVs)
 
     env = graphenv.Graphenv(G, reward)
+
+    expart_paths = graphenv.make_expart_paths(G, number_of_exparts)
+
+
+    learn_data = []
+
+    for i in range(number_of_exparts - num_testdata):
+        learn_data.append(expart_paths.pop())
     
     gamma = 0.9
     #0.99,0.95,0.90,0.85,0.80
     #traj =[[20, 21, 22, 23, 24, 19, 14, 9, 4], [20, 15, 10, 11, 6, 7, 2, 3, 4], [20, 15, 10, 5, 6, 7, 2, 3, 4], [20, 15, 10, 11, 6, 7, 2, 3, 4], [20, 21, 22, 23, 24, 19, 14, 9, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 15, 16, 17, 12, 7, 2, 3, 4], [20, 15, 10, 5, 6, 7, 8, 3, 4], [20, 15, 16, 11, 6, 7, 8, 9, 4], [20, 21, 16, 11, 6, 7, 8, 9, 4], [20, 15, 16, 17, 12, 13, 14, 9, 4], [20, 21, 22, 17, 12, 7, 8, 3, 4], [20, 15, 16, 17, 12, 13, 8, 3, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 21, 16, 17, 12, 7, 2, 3, 4], [20, 15, 10, 5, 6, 7, 2, 3, 4], [20, 15, 16, 11, 6, 7, 8, 3, 4], [20, 15, 16, 11, 6, 7, 2, 3, 4], [20, 21, 16, 11, 12, 7, 2, 3, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 22, 17, 18, 13, 14, 9, 4], [20, 15, 10, 5, 6, 1, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 21, 22, 17, 12, 7, 2, 3, 4], [20, 15, 10, 11, 12, 7, 2, 3, 4], [20, 15, 16, 11, 6, 7, 8, 3, 4], [20, 21, 22, 23, 24, 19, 14, 9, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 15, 10, 11, 12, 7, 2, 3, 4], [20, 21, 22, 23, 18, 13, 14, 9, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 15, 16, 17, 12, 13, 8, 3, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 15, 16, 11, 6, 7, 8, 9, 4], [20, 15, 10, 11, 12, 13, 8, 9, 4], [20, 15, 16, 17, 18, 13, 14, 9, 4], [20, 21, 22, 17, 12, 13, 8, 3, 4], [20, 15, 16, 17, 18, 13, 8, 3, 4], [20, 21, 22, 17, 12, 7, 8, 3, 4], [20, 21, 22, 23, 18, 19, 14, 9, 4], [20, 15, 16, 17, 12, 13, 8, 3, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 15, 16, 11, 12, 13, 8, 9, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 21, 22, 17, 18, 13, 14, 9, 4], [20, 15, 10, 11, 6, 7, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 15, 16, 11, 12, 13, 8, 3, 4], [20, 21, 22, 17, 12, 7, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 21, 22, 17, 12, 13, 8, 3, 4], [20, 15, 16, 17, 18, 13, 8, 9, 4], [20, 15, 16, 11, 6, 7, 2, 3, 4], [20, 15, 10, 11, 12, 7, 8, 3, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 15, 10, 11, 6, 1, 2, 3, 4], [20, 15, 10, 5, 6, 7, 8, 3, 4], [20, 21, 16, 11, 6, 7, 2, 3, 4], [20, 15, 10, 11, 6, 7, 8, 9, 4], [20, 21, 22, 23, 18, 19, 14, 9, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 21, 16, 17, 12, 7, 2, 3, 4], [20, 21, 22, 23, 18, 13, 8, 3, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 15, 16, 17, 12, 13, 14, 9, 4], [20, 15, 16, 17, 18, 19, 14, 9, 4], [20, 21, 22, 17, 12, 13, 14, 9, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 15, 10, 11, 6, 7, 8, 9, 4], [20, 21, 22, 23, 18, 13, 8, 9, 4], [20, 21, 16, 17, 12, 13, 14, 9, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 15, 10, 11, 6, 7, 8, 3, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 21, 22, 17, 18, 13, 8, 9, 4], [20, 21, 16, 17, 12, 7, 2, 3, 4], [20, 15, 10, 11, 12, 13, 14, 9, 4], [20, 15, 16, 17, 18, 19, 14, 9, 4], [20, 21, 16, 17, 12, 7, 8, 9, 4], [20, 15, 16, 17, 18, 13, 8, 3, 4], [20, 21, 16, 11, 12, 7, 2, 3, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 15, 16, 11, 6, 7, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 21, 16, 11, 6, 7, 2, 3, 4], [20, 21, 22, 17, 12, 13, 8, 9, 4], [20, 21, 22, 17, 12, 7, 8, 9, 4], [20, 21, 22, 17, 18, 13, 8, 3, 4], [20, 21, 16, 11, 12, 7, 8, 9, 4], [20, 21, 22, 17, 12, 13, 14, 9, 4], [20, 15, 16, 17, 18, 19, 14, 9, 4], [20, 15, 16, 17, 12, 7, 2, 3, 4], [20, 15, 16, 11, 6, 1, 2, 3, 4], [20, 15, 16, 17, 18, 13, 8, 9, 4], [20, 21, 22, 17, 12, 7, 8, 9, 4], [20, 15, 10, 5, 6, 7, 2, 3, 4]] 
-    traj = graphenv.make_expart_paths(G, number_of_exparts)
+    traj = learn_data
     num_traj = len(traj)
     max_step = len(traj[0])
     
     """reward estimation"""
     #delta は　勾配ベクトルにおけるL2ノルムの閾値（deltaを下回ったら推定完了とする）,learning_lateは勾配変化の学習率
     delta, learning_rate = 0.01, 0.015
-    est_reward, soft_Q_policy = MaxEntIRL_graph(env, traj, delta, max_step, learning_rate)                
+    est_reward, soft_Q_policy = MaxEntIRL_graph(env, traj, delta, max_step, learning_rate, inintV) 
+    if inintV == 0:
+        print("not in intV")
+    else:
+        print("in intV")               
     
     #報酬を保存
     #np.savetxt("R_X5Y5.csv",est_reward.reshape((X,Y)),delimiter=", ")
 
     #print(G)
+    #print(softmax(np.array([-2,-56,-6,7,-4,3])))
 
     print(est_reward)
-    print(soft_Q_policy)
+    print(softmax(est_reward))
+    print(sum(softmax(est_reward)))
+    #print(soft_Q_policy)
     
     #env_est = gridworld.GridWorld(grid_shape, est_reward)
     #est_agent = ValueIteration(env_est, gamma)
