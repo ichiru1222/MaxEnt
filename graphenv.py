@@ -16,7 +16,7 @@ class Graphenv:
 
         
         self.nS = nx.number_of_nodes(graph) #状態数　（ノードの数）
-        print(self.nS)
+        #print(self.nS)
         self.nA = [x[1] for x in graph.degree()] #行動数　各状態に対しての行動数を辞書に格納
         self.graph = graph
         self.P = self.make_prob()
@@ -95,7 +95,7 @@ def make_expart_paths(graph, number_of_exparts):  #エキスパート軌跡の�
     return exparts_paths_eq
 
 def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0～1に標準化したものを返す
-    closeness=nx.closeness_centrality(graph) #TDの導出、intVS:辞書型
+    closeness=nx.closeness_centrality(graph) #TDの導出、intVS:numpy
     mds = {}
     ras = {}
     intVs = np.array([])
@@ -133,21 +133,27 @@ def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0�
 
 
 if __name__ == '__main__':
-    number_of_nodes = 100
-    p = 0.1
+    number_of_nodes = 50
+    p = 0.05
     number_of_exparts = 10
     reward = np.zeros(10)
     graph = make_random_graph(number_of_nodes, p)
     
-   
+    def softmax(a):
+        a_max = max(a)
+        x = np.exp(a-a_max)
+        u = np.sum(x)
+        return x/u
+
     env = Graphenv(graph, reward)
     print(env.P)
     print(env.P.shape)
     print(env.P.dtype)
 
     print(make_expart_paths(graph,number_of_exparts))
-    print(spacesyntax(graph))
-    print(type(spacesyntax(graph)))
+    #print(spacesyntax(graph))
+    print(softmax(spacesyntax(graph)))
+   
 
     #print(graph.)
 
