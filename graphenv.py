@@ -94,11 +94,11 @@ def make_expart_paths(graph, number_of_exparts):  #エキスパート軌跡の�
     
     return exparts_paths_eq
 
-def spacesyntax(graph):
+def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0～1に標準化したものを返す
     closeness=nx.closeness_centrality(graph) #TDの導出、intVS:辞書型
     mds = {}
     ras = {}
-    intVs = {}
+    intVs = np.array([])
     nodes_len = len(list(graph.nodes))
     #print(closeness)
     for key, value in closeness.items():
@@ -112,10 +112,11 @@ def spacesyntax(graph):
     dn = dnup/dndown
     #print(dn)
     for key, ra in ras.items():
-        intVs[key] = dn/ra
+        intVs = np.append(intVs,dn/ra)
     #print(intVs)
 
     return intVs
+
    
 
 
@@ -146,6 +147,7 @@ if __name__ == '__main__':
 
     print(make_expart_paths(graph,number_of_exparts))
     print(spacesyntax(graph))
+    print(type(spacesyntax(graph)))
 
     #print(graph.)
 

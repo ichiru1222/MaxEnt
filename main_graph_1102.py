@@ -22,6 +22,17 @@ def phi(state, number_of_nodes): #特徴量
     #行列で返す
     return phi_s 
 
+def phi_intV(state, number_of_nodes): #特徴量
+    #one-hotベクトル化する
+    phi_s = np.zeros(number_of_nodes)
+    for i in range(number_of_nodes):
+        if i == state:
+            phi_s[i] = 1
+        else:
+            phi_s[i] = 0 
+    #行列で返す
+    return phi_s 
+
 def Mu(traj, number_of_nodes):
     Mu_s = np.zeros(number_of_nodes)
     for s in traj:
@@ -38,7 +49,7 @@ def MuE(trajectories, number_of_nodes):
     
     return MuE_m
 
-def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate):#MaxEnt本体
+def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate):#MaxEnt本体 inintV:
     #P = np.array([[np.eye(1, env.nS, env.P[s][a][0][1])[0] for a in range(env.nA)] for s in range(env.nS)])
     P = env.P
     #x_size,y_size = env.shape[0],env.shape[1]
@@ -157,6 +168,8 @@ if __name__ == '__main__':
     import graphenv
  
     from value_iteration import ValueIteration
+
+
     
     #setting env
     #X,Y = 5,5
