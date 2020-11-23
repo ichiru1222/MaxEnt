@@ -117,6 +117,25 @@ def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0�
 
     return intVs
 
+def path_relative_frequency(path, number_of_nodes):#軌跡の通った回数を各ノードごとに相対度数として表示
+       #path:[[1,2,6,4,4,4],[5,6,7,8,9,10]]の形, number_of_nodes:ノードの数
+    frequency = np.zeros(number_of_nodes)
+    all_state = 0
+
+    for p in path:
+        p_set = set(p)
+        all_state += len(p_set)
+        for s in p_set:
+            frequency[s] += 1
+    relative_frequency = frequency/all_state
+    return relative_frequency
+                
+
+                
+
+
+
+
    
 
 
@@ -139,6 +158,10 @@ if __name__ == '__main__':
     reward = np.zeros(10)
     graph = make_random_graph(number_of_nodes, p)
     
+    path = make_expart_paths(graph,number_of_exparts)
+
+    print(path_relative_frequency(path, number_of_nodes))
+
     def softmax(a):
         a_max = max(a)
         x = np.exp(a-a_max)
@@ -146,11 +169,11 @@ if __name__ == '__main__':
         return x/u
 
     env = Graphenv(graph, reward)
-    print(env.P)
-    print(env.P.shape)
+    #print(env.P)
+    #print(env.P.shape)
     print(env.P.dtype)
 
-    print(make_expart_paths(graph,number_of_exparts))
+    print()
     #print(spacesyntax(graph))
     print(softmax(spacesyntax(graph)))
    
