@@ -62,8 +62,8 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#
     global muE
     muE = MuE(trajectories, env.nS, inintV)
     #muE[4],muE[24] = 0.5,0.5
-    print(muE)
-    print(sum(muE))    
+    #print(muE)
+    #print(sum(muE))    
     theta = np.random.uniform(-0.5, 0.5, size=env.nS)
     feature_matrix = np.eye(env.nS)
 
@@ -177,6 +177,7 @@ def softmax(a):
 ############ ここまで関数 ########### ここからmain ##############
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     import graphenv
  
     from value_iteration import ValueIteration
@@ -189,63 +190,138 @@ if __name__ == '__main__':
     #grid_shape =[X,Y]
     #reward = np.full(np.prod(grid_shape), 0.0)
     #setting expert 
-    number_of_nodes = 30
+
+    #ノードの数
+    number_of_nodes = 40
+    #ノード間のエッジの生成確率
     p = 0.05
+    #報酬をノードの数ごとに格納
     reward = np.zeros(number_of_nodes)
+    #エキスパート軌跡の総数
     number_of_exparts = 500
-    inintV = 1
+    #intVを組み入れるかどうか，inintV=0 ならそのまま逆強化学習を実行，それ以外ならintVを組み込む
+    inintV = 0
+    #testdataの数
     num_testdata = 100
+    #learndataの数
     num_learndata = number_of_exparts - num_testdata
 
-    
-    G = graphenv.make_random_graph(number_of_nodes, p) #ランダムな連結グラフ
+    correlation_list = []
+
+    G = graphenv.make_random_graph(number_of_nodes, p) #ランダムな連結グラフの生成
+        #各ノードのintVを格納
     intVs = graphenv.spacesyntax(G)
+        #各ノードのIntVをsoftmaxによって正規化したものを格納
     intVs_softmax = softmax(intVs)
-
+        #グラフ環境の生成
     env = graphenv.Graphenv(G, reward)
-
+        #エキスパート軌跡の生成とtestdataの格納
     expart_paths = graphenv.make_expart_paths(G, number_of_exparts)
 
-
+        #learndataの格納
     learn_data = []
+
 
     for i in range(number_of_exparts - num_testdata):
         learn_data.append(expart_paths.pop())
-    
+
+
+
+    ##################################実験２####################################################
+    eq_traj = graphenv.make_one_expart_paths(G, number_of_exparts)
+
+
+
+        
     gamma = 0.9
-    #0.99,0.95,0.90,0.85,0.80
+        #0.99,0.95,0.90,0.85,0.80
     #traj =[[20, 21, 22, 23, 24, 19, 14, 9, 4], [20, 15, 10, 11, 6, 7, 2, 3, 4], [20, 15, 10, 5, 6, 7, 2, 3, 4], [20, 15, 10, 11, 6, 7, 2, 3, 4], [20, 21, 22, 23, 24, 19, 14, 9, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 15, 16, 17, 12, 7, 2, 3, 4], [20, 15, 10, 5, 6, 7, 8, 3, 4], [20, 15, 16, 11, 6, 7, 8, 9, 4], [20, 21, 16, 11, 6, 7, 8, 9, 4], [20, 15, 16, 17, 12, 13, 14, 9, 4], [20, 21, 22, 17, 12, 7, 8, 3, 4], [20, 15, 16, 17, 12, 13, 8, 3, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 21, 16, 17, 12, 7, 2, 3, 4], [20, 15, 10, 5, 6, 7, 2, 3, 4], [20, 15, 16, 11, 6, 7, 8, 3, 4], [20, 15, 16, 11, 6, 7, 2, 3, 4], [20, 21, 16, 11, 12, 7, 2, 3, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 22, 17, 18, 13, 14, 9, 4], [20, 15, 10, 5, 6, 1, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 21, 22, 17, 12, 7, 2, 3, 4], [20, 15, 10, 11, 12, 7, 2, 3, 4], [20, 15, 16, 11, 6, 7, 8, 3, 4], [20, 21, 22, 23, 24, 19, 14, 9, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 15, 10, 11, 12, 7, 2, 3, 4], [20, 21, 22, 23, 18, 13, 14, 9, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 15, 16, 17, 12, 13, 8, 3, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 15, 16, 11, 6, 7, 8, 9, 4], [20, 15, 10, 11, 12, 13, 8, 9, 4], [20, 15, 16, 17, 18, 13, 14, 9, 4], [20, 21, 22, 17, 12, 13, 8, 3, 4], [20, 15, 16, 17, 18, 13, 8, 3, 4], [20, 21, 22, 17, 12, 7, 8, 3, 4], [20, 21, 22, 23, 18, 19, 14, 9, 4], [20, 15, 16, 17, 12, 13, 8, 3, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 15, 16, 11, 12, 13, 8, 9, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 21, 22, 17, 18, 13, 14, 9, 4], [20, 15, 10, 11, 6, 7, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 15, 16, 11, 12, 13, 8, 3, 4], [20, 21, 22, 17, 12, 7, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 21, 22, 17, 12, 13, 8, 3, 4], [20, 15, 16, 17, 18, 13, 8, 9, 4], [20, 15, 16, 11, 6, 7, 2, 3, 4], [20, 15, 10, 11, 12, 7, 8, 3, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 15, 10, 11, 6, 1, 2, 3, 4], [20, 15, 10, 5, 6, 7, 8, 3, 4], [20, 21, 16, 11, 6, 7, 2, 3, 4], [20, 15, 10, 11, 6, 7, 8, 9, 4], [20, 21, 22, 23, 18, 19, 14, 9, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 21, 16, 17, 12, 7, 2, 3, 4], [20, 21, 22, 23, 18, 13, 8, 3, 4], [20, 21, 16, 11, 6, 1, 2, 3, 4], [20, 15, 16, 17, 12, 13, 14, 9, 4], [20, 15, 16, 17, 18, 19, 14, 9, 4], [20, 21, 22, 17, 12, 13, 14, 9, 4], [20, 15, 10, 5, 0, 1, 2, 3, 4], [20, 15, 10, 11, 6, 7, 8, 9, 4], [20, 21, 22, 23, 18, 13, 8, 9, 4], [20, 21, 16, 17, 12, 13, 14, 9, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 15, 10, 11, 6, 7, 8, 3, 4], [20, 21, 16, 17, 18, 19, 14, 9, 4], [20, 21, 22, 17, 18, 13, 8, 9, 4], [20, 21, 16, 17, 12, 7, 2, 3, 4], [20, 15, 10, 11, 12, 13, 14, 9, 4], [20, 15, 16, 17, 18, 19, 14, 9, 4], [20, 21, 16, 17, 12, 7, 8, 9, 4], [20, 15, 16, 17, 18, 13, 8, 3, 4], [20, 21, 16, 11, 12, 7, 2, 3, 4], [20, 21, 16, 11, 12, 13, 8, 3, 4], [20, 15, 16, 11, 6, 7, 2, 3, 4], [20, 21, 22, 17, 18, 19, 14, 9, 4], [20, 21, 16, 11, 6, 7, 2, 3, 4], [20, 21, 22, 17, 12, 13, 8, 9, 4], [20, 21, 22, 17, 12, 7, 8, 9, 4], [20, 21, 22, 17, 18, 13, 8, 3, 4], [20, 21, 16, 11, 12, 7, 8, 9, 4], [20, 21, 22, 17, 12, 13, 14, 9, 4], [20, 15, 16, 17, 18, 19, 14, 9, 4], [20, 15, 16, 17, 12, 7, 2, 3, 4], [20, 15, 16, 11, 6, 1, 2, 3, 4], [20, 15, 16, 17, 18, 13, 8, 9, 4], [20, 21, 22, 17, 12, 7, 8, 9, 4], [20, 15, 10, 5, 6, 7, 2, 3, 4]] 
-    traj = learn_data
+    traj = learn_data #学習に使用するデータ 実験１
+
+    #traj = eq_traj #実験２
+
+
     num_traj = len(traj)
     max_step = len(traj[0])
-    
+
+        #軌跡の通ったノードの相対度数を生成
+    rel_freq_data = graphenv.path_relative_frequency(expart_paths, number_of_nodes)
+        
     """reward estimation"""
-    #delta は　勾配ベクトルにおけるL2ノルムの閾値（deltaを下回ったら推定完了とする）,learning_lateは勾配変化の学習率
+        #delta は　勾配ベクトルにおけるL2ノルムの閾値（deltaを下回ったら推定完了とする）,learning_lateは勾配変化の学習率
     delta, learning_rate = 0.01, 0.015
     est_reward, soft_Q_policy = MaxEntIRL_graph(env, traj, delta, max_step, learning_rate, inintV) 
     if inintV == 0:
         print("not in intV")
     else:
-        print("in intV")               
-    
-    #報酬を保存
-    #np.savetxt("R_X5Y5.csv",est_reward.reshape((X,Y)),delimiter=", ")
+        print("in intV") 
 
-    #print(G)
-    #print(softmax(np.array([-2,-56,-6,7,-4,3])))
+        #報酬をsoftmaxで正規化
+    softmax_est_reward = softmax(est_reward)
 
+        #報酬を保存
+        #np.savetxt("R_X5Y5.csv",est_reward.reshape((X,Y)),delimiter=", ")
+
+        #print(G)
+        #print(softmax(np.array([-2,-56,-6,7,-4,3])))
+    print("estimate reward")
     print(est_reward)
-    print(softmax(est_reward))
-    print(sum(softmax(est_reward)))
+
+    print("####################################################################################")
+
+    print("softmax reward")
+    print(softmax_est_reward)
+    print(sum(softmax_est_reward))
+    #print(sum(softmax(est_reward)))
     #print(soft_Q_policy)
+        
+        #env_est = gridworld.GridWorld(grid_shape, est_reward)
+        #est_agent = ValueIteration(env_est, gamma)
+        
+        #状態価値を出す#確率的な方策にも対応
+        #V_est = est_agent.get_pi_value(soft_Q_policy)
+        #print(V_est)
+        #np.savetxt("V_Pro_1.csv",V_est.reshape((5,5)),delimiter=", ")
+    print("####################################################################################")
+
+    #相関係数の計算
+    coref = np.corrcoef(rel_freq_data, est_reward)
+    correlation = coref[0][1]
+    print("correlation:{}".format(correlation))
+
+    print(eq_traj[0])
+
+    print(avarage)
+
+    #グラフの可視化
+    graphenv.graph_view(G, eq_traj, est_reward, number_of_nodes, ylb="Reward(intV)")
+    graphenv.graph_view(G, eq_traj, intVs_softmax, number_of_nodes, ylb="intV")
     
-    #env_est = gridworld.GridWorld(grid_shape, est_reward)
-    #est_agent = ValueIteration(env_est, gamma)
+
+
+    #correlation_list.append(correlation)
+    """
+        #散布図の作成
+        #figureの生成
+    fig = plt.figure()
+        #axをfigに設定
+    ax = fig.add_subplot(1, 1, 1)
+        #x軸：ノードを軌跡が通る回数の相対度数，y軸：報酬をsoftmaxで正規化したもの
+    ax.scatter(rel_freq_data, est_reward)
+    plt.title("Correlation:{}".format(correlation))
+    plt.xlabel("Relative frequency")
+    if inintV == 0:
+        plt.ylabel("Rewards")
+    else:
+        plt.ylabel("Rewards(intV)")
+    plt.grid(True)
+        #散布図の表示
+        #ax.set_ylim(bottom=0, top=0.001)
+    plt.show()
+
+    #print(correlation_list)
     
-    #状態価値を出す#確率的な方策にも対応
-    #V_est = est_agent.get_pi_value(soft_Q_policy)
-    #print(V_est)
-    #np.savetxt("V_Pro_1.csv",V_est.reshape((5,5)),delimiter=", ")
+"""
  
 """
 

@@ -89,10 +89,15 @@ def make_expart_paths(graph, number_of_exparts):  #エキスパート軌跡の�
         else:
             exparts_paths_eq.append(path)
 
-
-
-    
     return exparts_paths_eq
+
+
+def make_one_expart_paths(graph, number_of_exparts):
+    path_list = list(nx.all_simple_paths(graph, target=nx.number_of_nodes(graph)-1, source=0))
+    path_max = max(path_list)
+    one_exparts_paths = [path_max for i in range(number_of_exparts)]
+    return one_exparts_paths
+    
 
 def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0～1に標準化したものを返す
     closeness=nx.closeness_centrality(graph) #TDの導出、intVS:numpy
@@ -121,14 +126,44 @@ def path_relative_frequency(path, number_of_nodes):#軌跡の通った回数を�
        #path:[[1,2,6,4,4,4],[5,6,7,8,9,10]]の形, number_of_nodes:ノードの数
     frequency = np.zeros(number_of_nodes)
     all_state = 0
-
     for p in path:
         p_set = set(p)
         all_state += len(p_set)
         for s in p_set:
             frequency[s] += 1
+
     relative_frequency = frequency/all_state
     return relative_frequency
+
+"""
+    for p in path:
+        all_state += len(p)
+        for s in p:
+            frequency[s] += 1
+    relative_frequency = frequency/all_state
+    return relative_frequency
+"""
+
+def graph_view(graph, path, reward, number_of_nodes, ylb):
+    avarage_reward = sum(reward) / number_of_nodes
+    sizes = reward * 300 / avarage_reward
+    colors = ["green" for i in range(number_of_nodes)]
+    for i in path[0]:
+        colors[i] = "red"
+
+    # 各頂点に対して円周上の座標を割り当てる
+    pos = nx.circular_layout(graph)
+    x = [i for i in range(number_of_nodes)]
+    y = reward
+
+    fig = plt.figure(figsize=(15,8))
+    ax1 = fig.add_subplot(1,2,1,  xlabel='node', ylabel=ylb)
+    ax1.bar(x, y, color=colors)
+    ax2 = fig.add_subplot(1,2,2)
+    nx.draw(graph, with_labels=True, node_color = colors, node_size = sizes, pos=pos)
+    plt.show(graph)
+
+
                 
 
                 
@@ -161,6 +196,7 @@ if __name__ == '__main__':
     path = make_expart_paths(graph,number_of_exparts)
 
     print(path_relative_frequency(path, number_of_nodes))
+    print(sum(path_relative_frequency(path, number_of_nodes)))
 
     def softmax(a):
         a_max = max(a)
@@ -174,8 +210,17 @@ if __name__ == '__main__':
     print(env.P.dtype)
 
     print()
-    #print(spacesyntax(graph))
+    print(spacesyntax(graph))
     print(softmax(spacesyntax(graph)))
+    print(sum(softmax(spacesyntax(graph))))
+
+    intVs = spacesyntax(graph)
+
+    for i in range(number_of_nodes):
+        graph.add_node(i, intV=intVs[i])
+
+    print(graph.nodes(data=True))
+    print(make_one_expart_paths(graph, 10))
    
 
     #print(graph.)
