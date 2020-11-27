@@ -17,7 +17,7 @@ class Graphenv:
         
         self.nS = nx.number_of_nodes(graph) #状態数　（ノードの数）
         #print(self.nS)
-        self.nA = [x[1] for x in graph.degree()] #行動数　各状態に対しての行動数を辞書に格納
+        self.nA = [x[1] for x in graph.degree()] #行動数　各状態に対しての行動数をリストに格納
         self.graph = graph
         self.P = self.make_prob()
 

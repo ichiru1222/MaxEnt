@@ -72,21 +72,26 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#
     print(R)    
     #for i in tqdm(range(n_epochs)):
 
+    #float型の無限大を表す
     norm_grad = float('inf')
+
     while(norm_grad > delta):  
         #Rの計算
         R = np.dot(theta, feature_matrix.T)    
 
         #インナーループ
         """Backward pass：後ろからたどる"""
+        #nS:状態数　nA：行動数　状態数×行動数のゼロ行列
         policy = np.zeros([env.nS, max(env.nA)])
 
         Z_a = np.zeros([env.nS, max(env.nA)])
+        
+        #要素全てが1の行列
         Z_s = np.ones([env.nS])
         
         #Note:N回のイテレーションの”N”は，軌跡の長さ
         for n in range(max_step):            
-            Z_a = np.einsum("san, s, n -> sa", P, np.exp(R), Z_s) #nはnext_stateの意
+            Z_a = np.einsum("san, s, n -> sa", P, np.exp(R), Z_s) #nはnext_stateの意　アインシュタインの縮約記法
             Z_s = np.sum(Z_a, axis = 1) #Z_sの初期化位置は"ここ"
                         
         policy = np.einsum("sa, s -> sa", Z_a, 1/Z_s)#各状態における行動選択確率：：：これがsoft_Q_policy
@@ -200,7 +205,7 @@ if __name__ == '__main__':
     #エキスパート軌跡の総数
     number_of_exparts = 500
     #intVを組み入れるかどうか，inintV=0 ならそのまま逆強化学習を実行，それ以外ならintVを組み込む
-    inintV = 0
+    inintV = 1
     #testdataの数
     num_testdata = 100
     #learndataの数
@@ -291,7 +296,7 @@ if __name__ == '__main__':
 
     print(eq_traj[0])
 
-    print(avarage)
+    #print(avarage)
 
     #グラフの可視化
     graphenv.graph_view(G, eq_traj, est_reward, number_of_nodes, ylb="Reward(intV)")
