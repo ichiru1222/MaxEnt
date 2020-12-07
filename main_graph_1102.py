@@ -315,7 +315,10 @@ if __name__ == '__main__':
         #np.savetxt("V_Pro_1.csv",V_est.reshape((5,5)),delimiter=", ")
     print("####################################################################################")
 
+    correlation = est_correlation(rel_freq_data, est_reward*-1)
+    print(correlation)
 
+    make_scatter(rel_freq_data, est_reward*-1, inintV, correlation)
 
         #相関係数の計算
     #coref = np.corrcoef(rel_freq_data, est_reward)
@@ -352,7 +355,7 @@ if __name__ == '__main__':
         #ax.set_ylim(bottom=0, top=0.001)
     plt.show()
 """
-    #print(correlation_list)
+  
     
 
  
