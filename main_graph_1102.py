@@ -178,6 +178,26 @@ def softmax(a):
     x = np.exp(a-a_max)
     u = np.sum(x)
     return x/u
+
+def make_scatter(x, y):
+        #散布図の作成
+        #figureの生成
+    fig = plt.figure()
+        #axをfigに設定
+    ax = fig.add_subplot(1, 1, 1)
+        #x軸：ノードを軌跡が通る回数の相対度数，y軸：報酬をsoftmaxで正規化したもの
+    ax.scatter(rel_freq_data, est_reward)
+    plt.title("Correlation:{}".format(correlation))
+    plt.xlabel("Relative frequency")
+    if inintV == 0:
+        plt.ylabel("Rewards")
+    else:
+        plt.ylabel("Rewards(intV)")
+    plt.grid(True)
+        #散布図の表示
+        #ax.set_ylim(bottom=0, top=0.001)
+    plt.show()
+
         
 ############ ここまで関数 ########### ここからmain ##############
 
@@ -299,13 +319,13 @@ if __name__ == '__main__':
     #print(avarage)
 
     #グラフの可視化
-    graphenv.graph_view(G, eq_traj, est_reward, number_of_nodes, ylb="Reward(intV)")
-    graphenv.graph_view(G, eq_traj, intVs_softmax, number_of_nodes, ylb="intV")
+    #graphenv.graph_view(G, eq_traj, est_reward, number_of_nodes, ylb="Reward(intV)")
+    #graphenv.graph_view(G, eq_traj, intVs_softmax, number_of_nodes, ylb="intV")
     
 
 
     #correlation_list.append(correlation)
-    """
+
         #散布図の作成
         #figureの生成
     fig = plt.figure()
@@ -326,7 +346,7 @@ if __name__ == '__main__':
 
     #print(correlation_list)
     
-"""
+
  
 """
 

@@ -92,7 +92,7 @@ def make_expart_paths(graph, number_of_exparts):  #エキスパート軌跡の�
     return exparts_paths_eq
 
 
-def make_one_expart_paths(graph, number_of_exparts):
+def make_one_expart_paths(graph, number_of_exparts): #一つの軌跡を作成
     path_list = list(nx.all_simple_paths(graph, target=nx.number_of_nodes(graph)-1, source=0))
     path_max = max(path_list)
     one_exparts_paths = [path_max for i in range(number_of_exparts)]
