@@ -179,14 +179,20 @@ def softmax(a):
     u = np.sum(x)
     return x/u
 
-def make_scatter(x, y):
+def est_correlation(x, y):
+        #相関係数の計算
+    coref = np.corrcoef(x, y)
+    correlation = coref[0][1]
+    return correlation
+
+def make_scatter(x, y, inintV, correlation):
         #散布図の作成
         #figureの生成
     fig = plt.figure()
         #axをfigに設定
     ax = fig.add_subplot(1, 1, 1)
         #x軸：ノードを軌跡が通る回数の相対度数，y軸：報酬をsoftmaxで正規化したもの
-    ax.scatter(rel_freq_data, est_reward)
+    ax.scatter(x, y)
     plt.title("Correlation:{}".format(correlation))
     plt.xlabel("Relative frequency")
     if inintV == 0:
@@ -309,12 +315,14 @@ if __name__ == '__main__':
         #np.savetxt("V_Pro_1.csv",V_est.reshape((5,5)),delimiter=", ")
     print("####################################################################################")
 
-    #相関係数の計算
-    coref = np.corrcoef(rel_freq_data, est_reward)
-    correlation = coref[0][1]
-    print("correlation:{}".format(correlation))
 
-    print(eq_traj[0])
+
+        #相関係数の計算
+    #coref = np.corrcoef(rel_freq_data, est_reward)
+    #correlation = coref[0][1]
+    #print("correlation:{}".format(correlation))
+
+    #print(eq_traj[0])
 
     #print(avarage)
 
@@ -325,7 +333,7 @@ if __name__ == '__main__':
 
 
     #correlation_list.append(correlation)
-
+"""
         #散布図の作成
         #figureの生成
     fig = plt.figure()
@@ -343,7 +351,7 @@ if __name__ == '__main__':
         #散布図の表示
         #ax.set_ylim(bottom=0, top=0.001)
     plt.show()
-
+"""
     #print(correlation_list)
     
 
