@@ -17,7 +17,7 @@ class Graphenv:
         
         self.nS = nx.number_of_nodes(graph) #状態数　（ノードの数）
         #print(self.nS)
-        self.nA = [x[1] for x in graph.degree()] #行動数　各状態に対しての行動数をリストに格納
+        self.nA = [x[1] for x in graph.degree()] #行動数　各状態に対しての行動数をリストに格納 [2,3,1,9]各状態に対する次数
         self.graph = graph
         self.P = self.make_prob()
 
@@ -92,7 +92,7 @@ def make_expart_paths(graph, number_of_exparts):  #エキスパート軌跡の�
     return exparts_paths_eq
 
 
-def make_one_expart_paths(graph, number_of_exparts): #一つの軌跡を作成
+def make_one_expart_paths(graph, number_of_exparts): #一つの軌跡を作成 0から39に至る最短経路
     path_list = list(nx.all_simple_paths(graph, target=nx.number_of_nodes(graph)-1, source=0))
     path_max = max(path_list)
     one_exparts_paths = [path_max for i in range(number_of_exparts)]
@@ -187,16 +187,22 @@ def graph_view(graph, path, reward, number_of_nodes, ylb):
 
 
 if __name__ == '__main__':
+    import shelve
+
+
     number_of_nodes = 40
     p = 0.05
     number_of_exparts = 10
     reward = np.zeros(10)
     graph = make_random_graph(number_of_nodes, p)
+
+    graph_data = shelve.open("database")
+    #graph_data["graph_1"] = graph
     
     path = make_expart_paths(graph,number_of_exparts)
 
-    print(path_relative_frequency(path, number_of_nodes))
-    print(sum(path_relative_frequency(path, number_of_nodes)))
+    #print(path_relative_frequency(path, number_of_nodes))
+    #print(sum(path_relative_frequency(path, number_of_nodes)))
 
     def softmax(a):
         a_max = max(a)
@@ -204,28 +210,30 @@ if __name__ == '__main__':
         u = np.sum(x)
         return x/u
 
-    env = Graphenv(graph, reward)
+    env = Graphenv(graph_data["graph_1"], reward)
     #print(env.P)
-    #print(env.P.shape)
+    print(env.P.shape)
     print(env.P.dtype)
+    print(env.nA)
 
     print()
-    print(spacesyntax(graph))
-    print(softmax(spacesyntax(graph)))
-    print(sum(softmax(spacesyntax(graph))))
+    print(spacesyntax(graph_data["graph_1"]))
+    print(softmax(spacesyntax(graph_data["graph_1"])))
+    print(sum(softmax(spacesyntax(graph_data["graph_1"]))))
 
-    intVs = spacesyntax(graph)
+    intVs = spacesyntax(graph_data["graph_1"])
 
+    
     for i in range(number_of_nodes):
-        graph.add_node(i, intV=intVs[i])
-
-    print(graph.nodes(data=True))
-    print(make_one_expart_paths(graph, 10))
+        graph_data["graph_1"].add_node(i, intV=intVs[i])
+    
+    print(graph_data["graph_1"].nodes(data=True))
+    print(make_one_expart_paths(graph_data["graph_1"], 10))
    
 
     #print(graph.)
 
     #print(graph)
-    nx.draw(graph, with_labels=True)
+    nx.draw(graph_data["graph_1"], with_labels=True)
 
-    plt.show(graph)
+    plt.show(graph_data["graph_1"])
