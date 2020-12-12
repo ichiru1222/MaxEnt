@@ -92,6 +92,10 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#
         policy = np.zeros([env.nS, max(env.nA)])
 
         Z_a = np.zeros([env.nS, max(env.nA)])
+        """
+        Z_a = [[]
+                []]
+        """
         
         #要素全てが1の行列
         Z_s = np.ones([env.nS])
@@ -101,10 +105,15 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#
             Z_a = np.einsum("san, s, n -> sa", P, np.exp(R), Z_s) #nはnext_stateの意　アインシュタインの縮約記法
             Z_s = np.sum(Z_a, axis = 1) #Z_sの初期化位置は"ここ"
                         
-        policy = np.einsum("sa, s -> sa", Z_a, 1/Z_s)#各状態における行動選択確率：：：これがsoft_Q_policy
+        policy = np.einsum("sa, s -> sa", Z_a, 1/Z_s)#各状態における行動選択確率：：：これがsoft_Q_policy　P(a|s)
         
         """Forward pass"""
         Dt = np.zeros([max_step, env.nS]) #論文アルゴリズム中の Dを指す
+
+        """
+        Dt = [[0,0,0]
+            [0,0,0,]]  例：状態数３，軌跡長２　その状態になる確率
+        """
          
         #initialize mu[0] based on trajectories initial state
         for trajectory in trajectories:
@@ -124,7 +133,7 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV):#
         norm_grad = np.linalg.norm(grad, ord=2)
 
         #print(grad)
-        #if np.random.rand() < 0.0001:
+        #if np.random.rand() < 0.0001: 小数部と整数部を返す　ｆ：小数部
         f, i = math.modf(norm_grad*100)
         #print(f)
         if f < 0.001:
@@ -295,12 +304,13 @@ if __name__ == '__main__':
     #エキスパート軌跡の総数
     number_of_exparts = 500
     #intVを組み入れるかどうか，inintV=0 ならそのまま逆強化学習を実行，それ以外ならintVを組み込む
-    inintV = 0
+    inintV = 1
     #testdataの数
     num_testdata = 100
     #learndataの数
     num_learndata = number_of_exparts - num_testdata
 
+    #毎エピソードでの相関係数を格納
     correlation_list = []
 
     #データベースから保存してあるグラフを取り出す
@@ -318,61 +328,71 @@ if __name__ == '__main__':
     intVs_standard = scipy.stats.zscore(intVs)
         #グラフ環境の生成
     env = graphenv.Graphenv(G, reward)
-        #エキスパート軌跡の生成とtestdataの格納
-    expart_paths = graphenv.make_expart_paths(G, number_of_exparts)
-
-        #learndataの格納
-    learn_data = []
 
 
-    for i in range(number_of_exparts - num_testdata):
-        learn_data.append(expart_paths.pop())
+    for i in range(50):
 
-    #実験１　ランダムな軌跡から学習する場合
-    traj = learn_data
+            #エキスパート軌跡の生成とtestdataの格納
+        expart_paths = graphenv.make_expart_paths(G, number_of_exparts)
 
-    ##################################実験２####################################################
-    eq_traj = graphenv.make_one_expart_paths(G, number_of_exparts)
-    #traj = eq_traj #実験２　ある同一の軌跡から学習する場合
-    ###########################################################################################
+            #learndataの格納
+        learn_data = []
 
-        
-    gamma = 0.9
-    #0.99,0.95,0.90,0.85,0.80
-    #traj = learn_data #学習に使用するデータ 実験１
 
-    num_traj = len(traj)
-    max_step = len(traj[0])
+        for i in range(number_of_exparts - num_testdata):
+            learn_data.append(expart_paths.pop())
 
-        #軌跡の通ったノードの相対度数を生成
-    rel_freq_data = graphenv.path_relative_frequency(expart_paths, number_of_nodes)
-        
-    """reward estimation"""
-        #delta は　勾配ベクトルにおけるL2ノルムの閾値（deltaを下回ったら推定完了とする）,learning_lateは勾配変化の学習率
-    delta, learning_rate = 0.01, 0.015
-    est_reward, soft_Q_policy = MaxEntIRL_graph(env, traj, delta, max_step, learning_rate, inintV) 
-    if inintV == 0:
-        print("not in intV")
-    else:
-        print("in intV") 
+        #実験１　ランダムな軌跡から学習する場合
+        traj = learn_data
 
-        #報酬をsoftmaxで正規化
-    #softmax_est_reward = softmax(est_reward)
+        ##################################実験２####################################################
+        #eq_traj = graphenv.make_one_expart_paths(G, number_of_exparts)
+        #traj = eq_traj #実験２　ある同一の軌跡から学習する場合
+        ###########################################################################################
 
-        #報酬を保存
-        #np.savetxt("R_X5Y5.csv",est_reward.reshape((X,Y)),delimiter=", ")
+            
+        gamma = 0.9
+        #0.99,0.95,0.90,0.85,0.80
+        #traj = learn_data #学習に使用するデータ 実験１
 
-        #print(G)
-        #print(softmax(np.array([-2,-56,-6,7,-4,3])))
-    print("estimate reward")
-    print(est_reward)
+        num_traj = len(traj)
+        max_step = len(traj[0])
 
-    print("action")
-    print(env.nA)
+            #軌跡の通ったノードの相対度数を生成
+        rel_freq_data = graphenv.path_relative_frequency(expart_paths, number_of_nodes)
+            
+        """reward estimation"""
+            #delta は　勾配ベクトルにおけるL2ノルムの閾値（deltaを下回ったら推定完了とする）,learning_lateは勾配変化の学習率
+        delta, learning_rate = 0.01, 0.015
+        est_reward, soft_Q_policy = MaxEntIRL_graph(env, traj, delta, max_step, learning_rate, inintV) 
+        if inintV == 0:
+            print("not in intV")
+        else:
+            print("in intV") 
 
-    print("####################################################################################")
-    print("reward_standard")
-    print(scipy.stats.zscore(est_reward))
+            #報酬をsoftmaxで正規化
+        #softmax_est_reward = softmax(est_reward)
+
+            #報酬を保存
+            #np.savetxt("R_X5Y5.csv",est_reward.reshape((X,Y)),delimiter=", ")
+
+            #print(G)
+            #print(softmax(np.array([-2,-56,-6,7,-4,3])))
+        print("estimate reward")
+        print(est_reward)
+
+        print("action")
+        print(env.nA)
+
+        print("####################################################################################")
+        print("reward_standard")
+        print(scipy.stats.zscore(est_reward))
+        print("####################################################################################")
+
+        #相関係数の計算
+        correlation = est_correlation(rel_freq_data, est_reward)
+        print("correlation:{}".format(correlation))
+        correlation_list.append(correlation)
     #print(soft_Q_policy)
         
         #env_est = gridworld.GridWorld(grid_shape, est_reward)
@@ -384,17 +404,21 @@ if __name__ == '__main__':
         #np.savetxt("V_Pro_1.csv",V_est.reshape((5,5)),delimiter=", ")
     
 
-    correlation = est_correlation(rel_freq_data, est_reward)
-    print(correlation)
+    #correlation = est_correlation(rel_freq_data, est_reward)
+    #print(correlation)
+
+    print(correlation_list)
+    correlation_list_str = [str(n) for n in correlation_list]
+    with open('correlation_list_in_intV.txt', 'w') as f:
+        f.write('\n'.join(correlation_list_str))
 
     make_scatter(rel_freq_data, est_reward, inintV, correlation)
 
         #相関係数の計算
-    #coref = np.corrcoef(rel_freq_data, est_reward)
-    #correlation = coref[0][1]
+
     #print("correlation:{}".format(correlation))
 
-    print(eq_traj[0])
+    #print(eq_traj[0])
 
     #print(avarage)
 
