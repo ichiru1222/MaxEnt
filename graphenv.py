@@ -91,6 +91,42 @@ def make_expart_paths(graph, number_of_exparts):  #エキスパート軌跡の�
 
     return exparts_paths_eq
 
+def make_random_goal_fixed_path(graph, number_of_exparts, goal_node):  #エキスパート軌跡の生成 maxentは軌跡の状態数をそろえる必要がある goal_node :ゴールとなるのーどの番号を指定 "random"を入力したらランダムにゴールを指定（エピソードごとにゴールとなるのーどが異なるようになる）
+    len_path = dict(nx.all_pairs_dijkstra(graph))
+    all_shortest_paths = {} #あるノードから別のノードまでの最短経路を格納　{0:{0:[0],1:[0,1]},1:{2:[1,3,2]}} 辞書の中に辞書
+    for i in range(nx.number_of_nodes(graph)):
+        all_shortest_paths[i] = len_path[i][1]
+    
+    #startをランダムに選択し，ゴールは引数からとる．スタートとゴールが同一な軌跡は考えない．それらの最短経路を取り出す
+    exparts_paths = []
+    gn = goal_node
+    if goal_node == "random":
+        gn = random.randint(0, nx.number_of_nodes(graph)-1)
+    for i in range(number_of_exparts):
+
+        start_node = random.randint(0, nx.number_of_nodes(graph)-1)
+        while gn == start_node:
+            start_node = random.randint(0, nx.number_of_nodes(graph)-1)
+        
+        
+        
+        exparts_paths.append(all_shortest_paths[start_node][gn])
+    
+    len_path_list = [len(x) for x in exparts_paths]
+    max_path = max(len_path_list)
+
+    exparts_paths_eq = [] #状態数をそろえた軌跡を格納
+
+    for path in exparts_paths:
+        if len(path) != max_path:
+            for i in range(max_path - len(path)):
+                path.append(path[-1])
+            exparts_paths_eq.append(path)
+        else:
+            exparts_paths_eq.append(path)
+
+    return exparts_paths_eq
+
 
 def make_one_expart_paths(graph, number_of_exparts): #一つの軌跡を作成 0から39に至る最短経路
     path_list = list(nx.all_simple_paths(graph, target=nx.number_of_nodes(graph)-1, source=0))
@@ -99,7 +135,7 @@ def make_one_expart_paths(graph, number_of_exparts): #一つの軌跡を作成 0
     return one_exparts_paths
     
 
-def spacesyntax(graph): #各ノードのintVを導出し，softmaxによって0～1に標準化したものを返す
+def spacesyntax(graph): #各ノードのintVを導出し，
     closeness=nx.closeness_centrality(graph) #TDの導出、intVS:numpy
     mds = {}
     ras = {}
@@ -142,11 +178,40 @@ def path_relative_frequency(path, number_of_nodes):#軌跡の通った回数を�
             frequency[s] += 1
     relative_frequency = frequency/all_state
     return relative_frequency
+
+
+
 """
 
-def graph_view(graph, path, reward, number_of_nodes, ylb):
+
+
+def graph_view_1st(graph, size, number_of_nodes, ylb):
+    #ランダム軌跡を与えたときのぐらふを表示
+    #inintV
+    #notinintV
+    sizes = (size -size.min()) / (size.max() - size.min()) * 1000
+ 
+
+    # 各頂点に対して円周上の座標を割り当てる
+    pos = nx.circular_layout(graph)
+    x = [i for i in range(number_of_nodes)]
+    y = size
+
+    fig = plt.figure(figsize=(15,8))
+    ax1 = fig.add_subplot(1,2,1,  xlabel='node', ylabel=ylb)
+    ax1.bar(x, y)
+    ax2 = fig.add_subplot(1,2,2)
+    nx.draw(graph, with_labels=True, node_size = sizes, pos=pos)
+    plt.show(graph)
+
+
+def graph_view_2nd(graph, path, reward, number_of_nodes, ylb):
+    #同一な軌跡を与えたときのぐらふを表示
     avarage_reward = sum(reward) / number_of_nodes
-    sizes = reward * 300 / avarage_reward
+    #inintV
+    #sizes = reward * 300 / avarage_reward
+    #notinintV
+    sizes = (reward - reward.min()) / (reward.max() - reward.min()) * 1000
     colors = ["green" for i in range(number_of_nodes)]
     for i in path[0]:
         colors[i] = "red"
@@ -229,11 +294,13 @@ if __name__ == '__main__':
     
     print(graph_data["graph_1"].nodes(data=True))
     print(make_one_expart_paths(graph_data["graph_1"], 10))
+    print("#######################################################")
+    print(make_random_goal_fixed_path(graph_data["graph_1"], 10, "random"))
    
 
     #print(graph.)
 
     #print(graph)
-    nx.draw(graph_data["graph_1"], with_labels=True)
+    #nx.draw(graph_data["graph_1"], with_labels=True)
 
-    plt.show(graph_data["graph_1"])
+    #plt.show(graph_data["graph_1"])
