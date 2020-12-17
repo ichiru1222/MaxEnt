@@ -128,9 +128,14 @@ def make_random_goal_fixed_path(graph, number_of_exparts, goal_node):  #エキ�
     return exparts_paths_eq
 
 
-def make_one_expart_paths(graph, number_of_exparts): #一つの軌跡を作成 0から39に至る最短経路
-    path_list = list(nx.all_simple_paths(graph, target=nx.number_of_nodes(graph)-1, source=0))
+def make_one_expart_paths(graph, number_of_exparts, start=0, goal=39): #一つの軌跡を作成 0から39に至る最長経路
+    path_list = list(nx.all_simple_paths(graph, target=goal, source=start))
     path_max = max(path_list)
+    one_exparts_paths = [path_max for i in range(number_of_exparts)]
+    return one_exparts_paths
+
+def make_one_expart_paths_any(path_list, number_of_exparts): #一つの軌跡を作成 path_listに入力した軌跡と同一な軌跡を生成
+    path_max = path_list
     one_exparts_paths = [path_max for i in range(number_of_exparts)]
     return one_exparts_paths
     
@@ -200,6 +205,7 @@ def graph_view_1st(graph, size, number_of_nodes, ylb):
     fig = plt.figure(figsize=(15,8))
     ax1 = fig.add_subplot(1,2,1,  xlabel='node', ylabel=ylb)
     ax1.bar(x, y)
+    plt.ylim(-50,10)
     ax2 = fig.add_subplot(1,2,2)
     nx.draw(graph, with_labels=True, node_size = sizes, pos=pos)
     plt.show(graph)
@@ -301,6 +307,6 @@ if __name__ == '__main__':
     #print(graph.)
 
     #print(graph)
-    #nx.draw(graph_data["graph_1"], with_labels=True)
+    nx.draw_kamada_kawai(graph_data["graph_1"], with_labels=True)
 
-    #plt.show(graph_data["graph_1"])
+    plt.show(graph_data["graph_1"])
