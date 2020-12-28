@@ -67,7 +67,7 @@ def MaxEntIRL_graph(env, trajectories, delta, max_step, learning_rate, inintV, i
     print("muE")
     print(muE)
     #print(sum(muE))    
-    theta = np.random.uniform(0, 1, size=env.nS)
+    theta = np.random.uniform(0, 0.1, size=env.nS)
     if inintV == 0:
         feature_matrix = np.eye(env.nS)
     else:
@@ -265,15 +265,15 @@ if __name__ == '__main__':
     #報酬をノードの数ごとに格納
     reward = np.zeros(number_of_nodes)
     #エキスパート軌跡の総数
-    number_of_exparts = 500
+    number_of_exparts = 100
     #intVを組み入れるかどうか，inintV=0 ならそのまま逆強化学習を実行，それ以外ならintVを組み込む
-    inintV = 1
+    inintV = 0
     #testdataの数
     num_testdata = 100
     #learndataの数
     num_learndata = number_of_exparts - num_testdata
     #エピソード数
-    episode = 1
+    episode = 10
 
     #毎エピソードでの相関係数を格納
     correlation_list = []
@@ -285,6 +285,14 @@ if __name__ == '__main__':
 
     #G = graphenv.make_random_graph(number_of_nodes, p) #ランダムな連結グラフの生成
     G = graph_data["graph_1"]
+
+    #単一な軌跡の場合，intVの差がわかりやすい単純なグラフ
+    G = nx.Graph()
+    G.add_nodes_from([0, 1, 2, 3, 4, 5, 6])
+    G.add_edges_from([(0, 3), (1, 3), (2, 3), (3, 4), (4, 5), (5, 6)])
+    number_of_nodes = nx.number_of_nodes(G)
+
+
         #各ノードのintVを格納
     intVs = graphenv.spacesyntax(G)
         #各ノードのIntVをsoftmaxによって正規化したものを格納
@@ -310,6 +318,8 @@ if __name__ == '__main__':
         #エキスパート軌跡の生成とtestdataの格納
         #startもgoalもランダムな軌跡
         expart_paths = graphenv.make_expart_paths(G, number_of_exparts)
+        expart_paths = graphenv.make_random_goal_fixed_path(G, number_of_exparts, 3)
+        traj = expart_paths
 
         #ゴールは固定でスタートがランダムな軌跡
         #expart_paths = graphenv.make_random_goal_fixed_path(G, number_of_exparts, 39)
@@ -322,13 +332,13 @@ if __name__ == '__main__':
 
         #実験１　ランダムな軌跡から学習する場合
         #traj = learn_data
-        path_list = [1, 30, 0, 7, 36]
-        #path_list = [36, 38, 23, 26]
-        #path_list = [36, 38, 23, 39, 22, 32, 31, 25, 11, 33, 19, 18, 20, 26]
+        path_list = [6, 5, 4, 3, 1]
+        #path_list = [3, 4, 5, 6]
+        
         ##################################実験２####################################################
         #eq_traj = graphenv.make_one_expart_paths(G, number_of_exparts, goal=39, start=0)
         eq_traj = graphenv.make_one_expart_paths_any(path_list, number_of_exparts)
-        traj = eq_traj #実験２　ある同一の軌跡から学習する場合
+        #traj = eq_traj #実験２　ある同一の軌跡から学習する場合
         ###########################################################################################
 
             
@@ -352,7 +362,7 @@ if __name__ == '__main__':
         print(intVs)   
         """reward estimation"""
             #delta は　勾配ベクトルにおけるL2ノルムの閾値（deltaを下回ったら推定完了とする）,learning_lateは勾配変化の学習率
-        delta, learning_rate = 0.4, 0.02
+        delta, learning_rate = 0.2, 0.02
         est_reward, soft_Q_policy, state_freq = MaxEntIRL_graph(env, traj, delta, max_step, learning_rate, inintV, intVs) 
         if inintV == 0:
             print("not in intV")
@@ -480,11 +490,14 @@ if __name__ == '__main__':
         graphenv.graph_view_1st(G, est_reward, number_of_nodes, ylb="Reward(intV)")
 
     graphenv.graph_view_1st(G, rel_freq_data, number_of_nodes, ylb="frequency")
+    """
     graphenv.graph_view_1st(G, intVs, number_of_nodes, ylb="intV")
     
-    """
+    
     print("trajectory")
     print(eq_traj[0])
+    #nx.draw(G, with_labels=True)
+    #plt.show()
 
     if inintV == 0:
         graphenv.graph_view_2nd(G, eq_traj, est_reward_mean, number_of_nodes, ylb="Reward")

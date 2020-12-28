@@ -205,7 +205,7 @@ def graph_view_1st(graph, size, number_of_nodes, ylb):
     fig = plt.figure(figsize=(15,8))
     ax1 = fig.add_subplot(1,2,1,  xlabel='node', ylabel=ylb)
     ax1.bar(x, y)
-    plt.ylim(-50,10)
+    #plt.ylim(-50,10)
     ax2 = fig.add_subplot(1,2,2)
     nx.draw(graph, with_labels=True, node_size = sizes, pos=pos)
     plt.show(graph)
@@ -259,18 +259,20 @@ def graph_view_2nd(graph, path, reward, number_of_nodes, ylb):
 
 if __name__ == '__main__':
     import shelve
-
+    import networkx as nx
 
     number_of_nodes = 40
     p = 0.05
     number_of_exparts = 10
     reward = np.zeros(10)
-    graph = make_random_graph(number_of_nodes, p)
+    G = nx.Graph()
+    G.add_nodes_from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    G.add_edges_from([(0, 3), (1, 3), (2, 3), (3, 4), (4, 5), (5, 6), (5, 7), (5, 8), (8, 9), (9, 10)])
 
-    graph_data = shelve.open("database")
+    #graph_data = shelve.open("database")
     #graph_data["graph_1"] = graph
     
-    path = make_expart_paths(graph,number_of_exparts)
+    #path = make_expart_paths(graph,number_of_exparts)
 
     #print(path_relative_frequency(path, number_of_nodes))
     #print(sum(path_relative_frequency(path, number_of_nodes)))
@@ -280,33 +282,25 @@ if __name__ == '__main__':
         x = np.exp(a-a_max)
         u = np.sum(x)
         return x/u
-
-    env = Graphenv(graph_data["graph_1"], reward)
+    """
+    env = Graphenv(graph, reward)
     #print(env.P)
     print(env.P.shape)
     print(env.P.dtype)
     print(env.nA)
+    """
 
-    print()
-    print(spacesyntax(graph_data["graph_1"]))
-    print(softmax(spacesyntax(graph_data["graph_1"])))
-    print(sum(softmax(spacesyntax(graph_data["graph_1"]))))
-
-    intVs = spacesyntax(graph_data["graph_1"])
+   
+    intVs = spacesyntax(G)
+    print(intVs)
 
     
-    for i in range(number_of_nodes):
-        graph_data["graph_1"].add_node(i, intV=intVs[i])
-    
-    print(graph_data["graph_1"].nodes(data=True))
-    print(make_one_expart_paths(graph_data["graph_1"], 10))
-    print("#######################################################")
-    print(make_random_goal_fixed_path(graph_data["graph_1"], 10, "random"))
+
    
 
     #print(graph.)
 
-    #print(graph)
-    nx.draw_kamada_kawai(graph_data["graph_1"], with_labels=True)
+    print(G.nodes)
+    nx.draw(G, with_labels=True)
 
-    plt.show(graph_data["graph_1"])
+    plt.show()
